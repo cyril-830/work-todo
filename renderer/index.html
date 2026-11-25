@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工作待办</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="todo">待办工作</button>
+      <button class="tab-btn" data-tab="done">已完成工作</button>
+    </div>
+    <div class="tab-content">
+      <div id="tab-todo" class="tab-panel active">
+        <div class="panel-header space-between">
+          <div class="filter-bar">
+          <input type="text" id="todo-search" placeholder="搜索工作名称、内容或来源" maxlength="50">
+            <select id="todo-sort">
+              <option value="">默认排序</option>
+              <option value="dueDate-asc">交付日期升序</option>
+              <option value="dueDate-desc">交付日期降序</option>
+              <option value="createdAt-asc">创建时间升序</option>
+              <option value="createdAt-desc">创建时间降序</option>
+            </select>
+          </div>
+          <div>
+            <button id="btn-save" class="btn">保存</button>
+            <button id="btn-export-todo" class="btn">导出待办</button>
+            <button id="btn-sticky" class="btn">切换为便签</button>
+            <button id="btn-create" class="btn btn-primary">创建待办</button>
+          </div>
+        </div>
+        <div id="todo-list" class="todo-list"></div>
+        <p id="todo-empty" class="empty-hint">暂无待办工作</p>
+      </div>
+      <div id="tab-done" class="tab-panel">
+        <div class="panel-header space-between">
+          <div class="filter-bar">
+            <input type="text" id="done-search" placeholder="搜索办结事项" maxlength="50">
+            <select id="filter-year"></select>
+            <select id="filter-month"></select>
+          </div>
+          <button id="btn-export-done" class="btn">导出办结</button>
+          <button id="btn-create-done" class="btn btn-primary">手动添加办结</button>
+        </div>
+        <div id="done-list" class="todo-list"></div>
+        <p id="done-empty" class="empty-hint">暂无已完成工作</p>
+        <p id="done-filter-empty" class="empty-hint" style="display:none">当前筛选条件下无办结事项</p>
+      </div>
+    </div>
+  </div>
+  <div id="todo-modal" class="modal">
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">创建待办</h3>
+        <button class="modal-close" id="btn-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="todo-name">工作名称 <em>*</em></label>
+          <input type="text" id="todo-name" placeholder="简明概括这项工作">
+          <span class="form-error" id="name-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="todo-due-date">交付日期 <em>*</em></label>
+          <input type="date" id="todo-due-date">
+          <span class="form-error" id="due-date-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="todo-work-type">工作类型 <em>*</em></label>
+          <select id="todo-work-type"><option>研究型工作</option><option>支撑性工作</option><option>事务性工作</option><option>其他</option></select>
+          <span class="form-error" id="work-type-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="todo-content">工作内容 <em>*</em></label>
+          <textarea id="todo-content" rows="4" placeholder="描述工作目标、过程和交付内容"></textarea>
+          <span class="form-error" id="content-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="todo-role">担任角色 <em>*</em></label>
+          <select id="todo-role"><option>主要贡献者</option><option>次要贡献者</option><option>审核把关</option><option>参与</option></select>
+          <span class="form-error" id="role-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="todo-reminder">事项提醒（选填）</label>
+          <input type="datetime-local" id="todo-reminder">
+        </div>
+        <div class="form-group">
+          <label for="todo-source">任务来源（选填）</label>
+          <input type="text" id="todo-source" maxlength="50" placeholder="例如：部门安排、项目需求">
+          <span class="form-error" id="source-error"></span>
+        </div>
+        <div class="form-group">
+          <label>紧急程度</label>
+          <div class="urgency-options">
+            <label class="urgency-radio"><input type="radio" name="urgency" value="特别紧急"><span class="urgency-light urgency-high"></span>特别紧急</label>
+            <label class="urgency-radio"><input type="radio" name="urgency" value="一般紧急"><span class="urgency-light urgency-medium"></span>一般紧急</label>
+            <label class="urgency-radio"><input type="radio" name="urgency" value="不紧急" checked><span class="urgency-light urgency-low"></span>不紧急</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-cancel" class="btn">取消</button>
+        <button type="button" id="btn-submit" class="btn btn-primary">确定</button>
+      </div>
+    </div>
+  </div>
+  <div id="done-modal" class="modal">
+    <div class="modal-overlay" id="done-modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>添加办结事项</h3>
+        <button class="modal-close" id="btn-done-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="done-name">工作名称 <em>*</em></label>
+          <input type="text" id="done-name" placeholder="简明概括这项工作">
+          <span class="form-error" id="done-name-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="done-date">完成时间 <em>*</em></label>
+          <input type="datetime-local" id="done-date">
+          <span class="form-error" id="done-date-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="done-work-type">工作类型 <em>*</em></label>
+          <select id="done-work-type"><option>研究型工作</option><option>支撑性工作</option><option>事务性工作</option><option>其他</option></select>
+          <span class="form-error" id="done-work-type-error"></span>
+        </div>
+        <div class="form-group"><label for="done-content">工作内容 <em>*</em></label><textarea id="done-content" rows="4" placeholder="描述工作内容"></textarea><span class="form-error" id="done-content-error"></span></div>
+        <div class="form-group"><label for="done-role">担任角色 <em>*</em></label><select id="done-role"><option>主要贡献者</option><option>次要贡献者</option><option>审核把关</option><option>参与</option></select><span class="form-error" id="done-role-error"></span></div>
+        <div class="form-group">
+          <label for="done-source">任务来源（选填）</label>
+          <input type="text" id="done-source" maxlength="50" placeholder="请输入任务来源">
+          <span class="form-error" id="done-source-error"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-done-cancel" class="btn">取消</button>
+        <button type="button" id="btn-done-submit" class="btn btn-primary">确定</button>
+      </div>
+    </div>
+  </div>
+  <div id="confirm-modal" class="modal">
+    <div class="modal-overlay" id="confirm-overlay"></div>
+    <div class="modal-content confirm-content">
+      <div class="confirm-body">
+        <p id="confirm-message"></p>
+      </div>
+      <div class="confirm-footer">
+        <button type="button" id="confirm-cancel" class="btn">取消</button>
+        <button type="button" id="confirm-ok" class="btn btn-primary">确定</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast-container" class="toast-container"></div>
+  <script src="index.js"></script>
+</body>
+</html>

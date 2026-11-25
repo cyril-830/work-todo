@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>便签</title>
+  <link rel="stylesheet" href="sticky.css">
+</head>
+<body>
+  <div class="sticky">
+    <div class="sticky-titlebar">
+      <span class="sticky-title">待办事项</span>
+      <div class="sticky-controls">
+        <button class="sticky-pin pinned" id="sticky-pin" title="置顶/取消置顶">📌</button>
+        <button class="sticky-minimize" id="sticky-minimize" title="最小化">─</button>
+        <button class="sticky-close" id="sticky-close">&times;</button>
+      </div>
+    </div>
+    <div class="sticky-content" id="sticky-content">
+      <div id="sticky-list" class="sticky-list"></div>
+      <p id="sticky-empty" class="sticky-hint" style="display:none">暂无待办事项</p>
+      <p id="sticky-error" class="sticky-hint" style="display:none">数据加载失败，请点击展开后重试</p>
+    </div>
+  </div>
+  <script src="sticky.js"></script>
+</body>
+</html>
