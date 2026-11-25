@@ -442,6 +442,27 @@ document.getElementById('btn-sticky').addEventListener('click', () => {
   ipcRenderer.invoke(channels.SWITCH_TO_STICKY)
 })
 
+document.getElementById('btn-check-updates').addEventListener('click', async () => {
+  const result = await ipcRenderer.invoke(channels.CHECK_FOR_UPDATES)
+  if (result.status === 'dev-build') showToast('开发运行状态无法检查更新，请使用安装版', 'info')
+  else if (result.status === 'error') showToast('检查更新失败：' + result.message, 'error')
+  else showToast('正在检查更新…', 'info')
+})
+
+ipcRenderer.on('app:updateStatus', async (_event, info) => {
+  if (info.status === 'available') {
+    if (await showConfirm('发现新版本 ' + info.version + '，现在下载吗？')) {
+      await ipcRenderer.invoke(channels.DOWNLOAD_UPDATE)
+      showToast('开始下载更新', 'info')
+    }
+  } else if (info.status === 'not-available') showToast('当前已是最新版本', 'success')
+  else if (info.status === 'downloading') showToast('正在下载更新：' + info.percent + '%', 'info')
+  else if (info.status === 'downloaded') {
+    if (await showConfirm('更新已下载完成，立即重启并安装吗？')) ipcRenderer.invoke(channels.INSTALL_UPDATE)
+    else showToast('更新将在你确认后安装', 'info')
+  } else if (info.status === 'error') showToast('更新失败：' + info.message, 'error')
+})
+
 document.getElementById('btn-save').addEventListener('click', async () => {
   const result = await ipcRenderer.invoke(channels.SAVE_DATA)
   if (result.success) {

@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron')
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const { registerIpcHandlers, channels } = require('./ipc-channels')
 const { createTray, destroyTray, hasTray } = require('./tray-manager')
@@ -9,6 +10,37 @@ let stickyWindow = null
 let lastActiveMode = 'main'
 let isQuitting = false
 let windowStateManager = null
+let updateDownloaded = false
+
+function publishUpdateStatus(payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('app:updateStatus', payload)
+}
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = false
+  autoUpdater.autoInstallOnAppQuit = false
+  autoUpdater.on('checking-for-update', () => publishUpdateStatus({ status: 'checking' }))
+  autoUpdater.on('update-available', info => publishUpdateStatus({ status: 'available', version: info.version }))
+  autoUpdater.on('update-not-available', () => publishUpdateStatus({ status: 'not-available' }))
+  autoUpdater.on('download-progress', progress => publishUpdateStatus({ status: 'downloading', percent: Math.round(progress.percent) }))
+  autoUpdater.on('update-downloaded', info => {
+    updateDownloaded = true
+    publishUpdateStatus({ status: 'downloaded', version: info.version })
+  })
+  autoUpdater.on('error', error => publishUpdateStatus({ status: 'error', message: error.message }))
+  ipcMain.handle(channels.CHECK_FOR_UPDATES, async () => {
+    if (!app.isPackaged) return { status: 'dev-build' }
+    try { await autoUpdater.checkForUpdates(); return { status: 'checking' } }
+    catch (error) { return { status: 'error', message: error.message } }
+  })
+  ipcMain.handle(channels.DOWNLOAD_UPDATE, async () => {
+    try { await autoUpdater.downloadUpdate(); return { status: 'downloading' } }
+    catch (error) { return { status: 'error', message: error.message } }
+  })
+  ipcMain.handle(channels.INSTALL_UPDATE, () => {
+    if (updateDownloaded) autoUpdater.quitAndInstall()
+  })
+}
 
 function createMainWindow(bounds) {
   const options = {
@@ -107,12 +139,17 @@ app.whenReady().then(() => {
   }
   createMainWindow(savedState)
   app.setAppUserModelId('com.worktodo.app')
+  setupAutoUpdater()
   registerIpcHandlers()
 
   createTray({
     onShow: showWindow,
     onQuit: quitApp
   })
+
+  setTimeout(() => {
+    if (app.isPackaged) autoUpdater.checkForUpdates().catch(error => console.warn('自动更新检查失败:', error.message))
+  }, 12000)
 
   ipcMain.handle(channels.SWITCH_TO_STICKY, () => {
     if (mainWindow) mainWindow.hide()

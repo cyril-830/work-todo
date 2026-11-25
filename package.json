@@ -1,6 +1,6 @@
 {
   "name": "work-todo",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "工作待办桌面小程序",
   "main": "main/main.js",
   "author": "",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "docx": "^9.7.1",
+    "electron-updater": "^6.8.11",
     "exceljs": "^4.4.0"
   },
   "devDependencies": {
@@ -41,6 +42,14 @@
       ],
       "icon": "assets/icon.ico"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "cyril-830",
+        "repo": "work-todo",
+        "releaseType": "release"
+      }
+    ],
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

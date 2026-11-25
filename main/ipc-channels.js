@@ -77,7 +77,10 @@ const channels = {
   TOGGLE_PIN: 'window:togglePin',
   GET_PIN_STATE: 'window:getPinState',
   SAVE_DATA: 'data:save',
-  REMINDER_DUE: 'todo:reminderDue'
+  REMINDER_DUE: 'todo:reminderDue',
+  CHECK_FOR_UPDATES: 'app:checkForUpdates',
+  DOWNLOAD_UPDATE: 'app:downloadUpdate',
+  INSTALL_UPDATE: 'app:installUpdate'
 }
 
 function validateTodoParams(params) {
